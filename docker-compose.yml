@@ -1,4 +1,4 @@
-version: '2'
+version: '2.2'
 
 services:
   config:
@@ -8,7 +8,7 @@ services:
     networks:
       - net
     hostname: config
-    container_name: config 
+    container_name: config
     external_links:
       - elk
       - kafka
@@ -22,7 +22,7 @@ services:
     depends_on:
       - config
     hostname: eureka
-    container_name: eureka  
+    container_name: eureka
     command: ["./wait-for-it.sh","config:8888","--timeout=100","--","/usr/local/bin/start.sh"]
     external_links:
       - elk
@@ -41,18 +41,19 @@ services:
     external_links:
       - elk
       - kafka
-      
+
   user:
     image: todo/user-service
+    scale: 2
     ports:
-      - 8016:8016
+      - "8016"
     networks:
       - net
     depends_on:
       - eureka
       - admin
     hostname: user
-    container_name: user
+    #    container_name: user
     command: ["./wait-for-it.sh","eureka:8010","--timeout=150","--","/usr/local/bin/start.sh"]
     external_links:
       - elk
@@ -73,7 +74,7 @@ services:
     command: ["./wait-for-it.sh","eureka:8010","--timeout=150","--","/usr/local/bin/start.sh"]
     external_links:
       - elk
-    
+
 
   gateway:
     image: todo/api-gateway
@@ -121,24 +122,25 @@ services:
     command: ["./wait-for-it.sh","eureka:8010","--timeout=150","--","/usr/local/bin/start.sh"]
     external_links:
       - elk
-      
+
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
-      - 2181:2181
+      - "2181:2181"
     networks:
       - net
-    mem_limit: 925288000  
-    cpu_shares: 100
-  
+    mem_limit: 925288000
+    cpu_shares: 500
+    restart: unless-stopped
+
   kafka:
     image: wurstmeister/kafka
     ports:
-      - 9092
+      - "9092:9092"
     depends_on:
       - zookeeper
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 172.19.0.1
+      KAFKA_ADVERTISED_HOST_NAME: "kafka"
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_CREATE_TOPICS: "todo-mail:1:1"
     volumes:
@@ -147,21 +149,38 @@ services:
     container_name: kafka
     networks:
       - net
-    mem_limit: 925288000  
-    cpu_shares: 100
+    mem_limit: 1gb
+    cpu_shares: 500
+    restart: unless-stopped
 
   proxy:
-     build: proxy/
-     ports:
-       - 8055:80
-     networks:
-       - net
-     depends_on:
-       - gateway
-     hostname: proxy
-     container_name: proxy  
-     command: ["./wait-for-it.sh","gateway:8018","--timeout=50","--","/usr/local/bin/start.sh"]
-     
+    build: proxy/
+    ports:
+      - 8055:80
+    networks:
+      - net
+    depends_on:
+      - gateway
+    hostname: proxy
+    container_name: proxy
+    command: ["./wait-for-it.sh","gateway:8018","--timeout=50","--","/usr/local/bin/start.sh"]
+
+  elk:
+    image: sebp/elk:latest
+    ports:
+      - "5601:5601"
+      - "9200:9200"
+      - "5044:5044"
+      - "5000:5000"
+    networks:
+      - net
+    volumes:
+      - todo_data:/var/lib/elasticsearch
+    hostname: elk
+    container_name: elk
+    mem_limit: 5gb
+    cpu_shares: 800
+
 volumes:
   todo_data:
     external: true

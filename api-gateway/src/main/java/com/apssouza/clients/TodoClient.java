@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author apssouza
  */
-@FeignClient("todo")
+@FeignClient("reminder")
 public interface TodoClient {
 
     @RequestMapping(value = "/todos", method = RequestMethod.GET)
-    public List<User> getAll();
+    public List<Todo> getAll();
 
     @RequestMapping(value = "/todos/search", method = RequestMethod.GET)
     public List<Todo> getTodoByUserEmaill(@RequestParam("email") String email);

@@ -2,7 +2,6 @@ package com.apssouza.services;
 
 import com.apssouza.clients.TodoClient;
 import com.apssouza.pojos.Todo;
-import com.apssouza.pojos.User;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * ToDo service 
+ * ToDo service
  * @author apssouza
  */
 @Component
@@ -20,7 +19,7 @@ public class TodoServiceImpl implements TodoService {
     TodoClient todoClient;
 
     @Override
-    public List<User> getAll() {
+    public List<Todo> getAll() {
         return todoClient.getAll();
     }
 
